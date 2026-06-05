@@ -653,8 +653,13 @@ function onWalkerChange() {
 }
 function quickMark(dateStr, slot) {
   openPanel(dateStr, slot);
-  const { walker } = computeSlot(fromYMD(dateStr), slot);
-  document.getElementById('ovWalker').value = walker === 'SGW' ? 'SGW' : walker;
+  const d = fromYMD(dateStr);
+  const { walker } = computeSlot(d, slot);
+  const [baseMorn, baseEve] = baseSlot(d);
+  // Always pre-fill the regular walker, never SGW — guest coverage is added manually
+  document.getElementById('ovWalker').value = walker === 'SGW'
+    ? (slot === 'morning' ? baseMorn : baseEve)
+    : walker;
   onWalkerChange();
 }
 function addOverride() {
