@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import http.server, json, os, pathlib, ssl
+from http.server import ThreadingHTTPServer
 
 PORT = 8093
 BASE = pathlib.Path(__file__).parent
@@ -45,8 +46,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    with http.server.HTTPServer(('', PORT), Handler) as httpd:
+    with ThreadingHTTPServer(('', PORT), Handler) as httpd:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ctx.load_cert_chain(CERT, KEY)
+        ctx.set_ciphers('DEFAULT')
+        ctx.options |= ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
         httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
         httpd.serve_forever()
