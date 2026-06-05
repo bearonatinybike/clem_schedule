@@ -372,27 +372,27 @@
 const BASE_ROTATION = [
   // Week 1
   ['Mom',  'Josh'],  // Mon
-  ['Josh', 'Mom'],   // Tue
-  ['Mom',  'Dad'],   // Wed
-  ['Josh', 'Mom'],   // Thu
-  ['Mom',  'Dad'],   // Fri
-  ['Dad',  'Josh'],  // Sat
+  ['Mom',  'Josh'],  // Tue
+  ['Mom',  'Dad'],   // Wed  ← handoff: Dad eve enables Josh to start Thu
+  ['Josh', 'Dad'],   // Thu
+  ['Josh', 'Mom'],   // Fri
+  ['Dad',  'Mom'],   // Sat
   ['Dad',  'Josh'],  // Sun
   // Week 2
-  ['Josh', 'Dad'],   // Mon
-  ['Mom',  'Josh'],  // Tue
+  ['Mom',  'Josh'],  // Mon
+  ['Mom',  'Dad'],   // Tue  ← handoff: Dad eve enables Josh to start Wed
   ['Josh', 'Dad'],   // Wed
-  ['Mom',  'Josh'],  // Thu
-  ['Josh', 'Dad'],   // Fri
+  ['Josh', 'Dad'],   // Thu
+  ['Josh', 'Mom'],   // Fri
   ['Dad',  'Mom'],   // Sat
-  ['Dad',  'Mom'],   // Sun
+  ['Dad',  'Josh'],  // Sun
   // Week 3
-  ['Mom',  'Dad'],   // Mon
-  ['Josh', 'Mom'],   // Tue
-  ['Mom',  'Dad'],   // Wed
-  ['Josh', 'Mom'],   // Thu
-  ['Mom',  'Dad'],   // Fri
-  ['Dad',  'Josh'],  // Sat
+  ['Mom',  'Josh'],  // Mon
+  ['Mom',  'Dad'],   // Tue
+  ['Mom',  'Dad'],   // Wed  ← handoff: Dad eve enables Josh to start Thu
+  ['Josh', 'Dad'],   // Thu
+  ['Josh', 'Mom'],   // Fri
+  ['Dad',  'Mom'],   // Sat
   ['Dad',  'Josh'],  // Sun
 ];
 const CYCLE_LEN = 21; // days
