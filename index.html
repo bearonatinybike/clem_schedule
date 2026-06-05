@@ -250,9 +250,20 @@
     header { flex-direction: column; align-items: flex-start; }
     main { padding: 1rem 1rem 3rem; }
     .week-nav { padding: 0.6rem 1rem; }
-    .schedule-grid { grid-template-columns: 60px repeat(7, 1fr); font-size: 0.7rem; }
-    .walker-chip { font-size: 0.68rem; padding: 3px 6px; }
-    .walker-chip .chip-dot { display: none; }
+    .walker-chip { font-size: 0.8rem; padding: 5px 10px; }
+  }
+  /* Mobile transposed layout: days as rows, AM/PM as columns */
+  .schedule-grid.mobile-view {
+    grid-template-columns: auto 1fr 1fr;
+  }
+  .schedule-grid.mobile-view .day-label-cell {
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 10px;
+    justify-content: flex-start;
+  }
+  .schedule-grid.mobile-view .day-label-cell .date-num {
+    font-size: 1rem;
   }
   .clem-photo {
     width: 56px;
@@ -571,59 +582,59 @@ function renderWeekNav() {
     `${startStr} – ${endStr} <span>cycle week ${weekInCycle} of 3</span>`;
 }
 
+function buildSlot(d, slotName) {
+  const { walker, isOverridden } = computeSlot(d, slotName);
+  const isGuest = walker === 'SGW';
+  return `<div class="walk-slot">
+    <button class="walker-chip ${walker}${isOverridden?' reassigned':''}"
+      onclick="quickMark('${toYMD(d)}','${slotName}')">
+      <span class="chip-dot"></span>${isGuest ? 'Guest' : walker}${isOverridden?' ↩':''}
+    </button>
+    ${isGuest ? `<span class="sub-chip" style="background:var(--plum-lite);color:var(--plum)">guest</span>` : isOverridden ? `<span class="sub-chip">cover</span>` : ''}
+  </div>`;
+}
+
 function renderGrid() {
   const grid = document.getElementById('scheduleGrid');
   const today = toYMD(new Date());
+  const mobile = window.innerWidth < 640;
+  grid.classList.toggle('mobile-view', mobile);
   let html = '';
 
-  // Top-left corner cell
-  html += `<div class="grid-cell grid-header row-header"></div>`;
-
-  // Day headers
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(currentWeekStart, i);
-    const ymd = toYMD(d);
-    const isToday = ymd === today;
-    html += `<div class="grid-cell grid-header${isToday?' today-col':''}">
-      <span>${DAYS[d.getDay()]}</span>
-      <span class="date-num">${d.getDate()}</span>
-    </div>`;
-  }
-
-  // Morning row
-  html += `<div class="grid-cell grid-row-label">AM</div>`;
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(currentWeekStart, i);
-    const { walker, isOverridden } = computeSlot(d, 'morning');
-    const isGuest = walker === 'SGW';
-    html += `<div class="grid-cell">
-      <div class="walk-slot">
-        <button class="walker-chip ${walker}${isOverridden?' reassigned':''}"
-          onclick="quickMark('${toYMD(d)}','morning')"
-          title="${isGuest ? 'Special guest walker' : 'Click to mark unavailable'}">
-          <span class="chip-dot"></span>${isGuest ? 'Guest' : walker}${isOverridden?' ↩':''}
-        </button>
-        ${isGuest ? `<span class="sub-chip" style="background:var(--plum-lite);color:var(--plum)">guest</span>` : isOverridden ? `<span class="sub-chip">cover</span>` : ''}
-      </div>
-    </div>`;
-  }
-
-  // Evening row
-  html += `<div class="grid-cell grid-row-label">PM</div>`;
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(currentWeekStart, i);
-    const { walker, isOverridden } = computeSlot(d, 'evening');
-    const isGuest = walker === 'SGW';
-    html += `<div class="grid-cell">
-      <div class="walk-slot">
-        <button class="walker-chip ${walker}${isOverridden?' reassigned':''}"
-          onclick="quickMark('${toYMD(d)}','evening')"
-          title="${isGuest ? 'Special guest walker' : 'Click to mark unavailable'}">
-          <span class="chip-dot"></span>${isGuest ? 'Guest' : walker}${isOverridden?' ↩':''}
-        </button>
-        ${isGuest ? `<span class="sub-chip" style="background:var(--plum-lite);color:var(--plum)">guest</span>` : isOverridden ? `<span class="sub-chip">cover</span>` : ''}
-      </div>
-    </div>`;
+  if (mobile) {
+    // Transposed: days as rows, AM/PM as columns
+    html += `<div class="grid-cell grid-header row-header"></div>`;
+    html += `<div class="grid-cell grid-header"><span>AM</span></div>`;
+    html += `<div class="grid-cell grid-header"><span>PM</span></div>`;
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(currentWeekStart, i);
+      const isToday = toYMD(d) === today;
+      html += `<div class="grid-cell grid-header day-label-cell${isToday?' today-col':''}">
+        <span>${DAYS[d.getDay()]}</span>
+        <span class="date-num">${d.getDate()}</span>
+      </div>`;
+      html += `<div class="grid-cell">${buildSlot(d, 'morning')}</div>`;
+      html += `<div class="grid-cell">${buildSlot(d, 'evening')}</div>`;
+    }
+  } else {
+    // Desktop: days as columns, AM/PM as rows
+    html += `<div class="grid-cell grid-header row-header"></div>`;
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(currentWeekStart, i);
+      const isToday = toYMD(d) === today;
+      html += `<div class="grid-cell grid-header${isToday?' today-col':''}">
+        <span>${DAYS[d.getDay()]}</span>
+        <span class="date-num">${d.getDate()}</span>
+      </div>`;
+    }
+    html += `<div class="grid-cell grid-row-label">AM</div>`;
+    for (let i = 0; i < 7; i++) {
+      html += `<div class="grid-cell">${buildSlot(addDays(currentWeekStart, i), 'morning')}</div>`;
+    }
+    html += `<div class="grid-cell grid-row-label">PM</div>`;
+    for (let i = 0; i < 7; i++) {
+      html += `<div class="grid-cell">${buildSlot(addDays(currentWeekStart, i), 'evening')}</div>`;
+    }
   }
 
   grid.innerHTML = html;
@@ -826,6 +837,7 @@ function clearAllOverrides() {
 document.getElementById('ovStart').value = toYMD(new Date());
 document.getElementById('ovEnd').value   = toYMD(new Date());
 loadOverrides().then(() => render());
+window.addEventListener('resize', render);
 </script>
 </body>
 </html>
