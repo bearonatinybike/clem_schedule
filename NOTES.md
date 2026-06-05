@@ -11,7 +11,8 @@ static files and shared override storage.
 Three walkers: **Dad**, **Mom**, **Josh**.
 - 2 walks per day: morning and evening
 - Nobody walks twice in one day unless there's no alternative
-- Dad does evenings only — drafted for mornings only as a last resort (see below)
+- Dad does weekday evenings + Saturday mornings
+- Dad can cover weekday mornings as a last resort (see below)
 - Perfectly equal over a **3-week repeating cycle** (7 walks each per cycle)
 
 The base 3-week rotation is encoded in `index.html` as a JS array. Week 4 = Week 1, etc.
@@ -80,10 +81,15 @@ SGW is only available in the slot picker, not the main override panel.
 
 ## Dad on Mornings
 
-Dad is normally evenings-only. If both Mom and Josh are unavailable for a
-morning slot, Dad is drafted as a last resort. A confirmation dialog —
-"Has Dad agreed to this?" — fires before the override is saved. Once Mom or
-Josh becomes available again, Dad automatically drops back off mornings.
+Dad is in the base rotation for Saturday mornings (2 of every 3 Saturdays).
+On weekends the full three-person pool is used for morning cover, so Dad is a
+normal fallback alongside Mom and Josh.
+
+On weekdays Dad is still last resort for mornings. If both Mom and Josh are
+unavailable, Dad is drafted, but a confirmation dialog — "Has Dad agreed to
+this?" — fires first. Once Mom or Josh becomes available again, Dad automatically
+drops back off weekday mornings. The consent dialog does not fire for weekend
+mornings.
 
 ## Adjusting the Base Rotation
 

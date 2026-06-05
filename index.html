@@ -290,7 +290,7 @@
 
 <main>
   <div class="legend">
-    <div class="legend-item"><div class="legend-dot Dad"></div> Dad (evenings; mornings as last resort)</div>
+    <div class="legend-item"><div class="legend-dot Dad"></div> Dad (evenings + Sat mornings; weekday mornings as last resort)</div>
     <div class="legend-item"><div class="legend-dot Mom"></div> Mom</div>
     <div class="legend-item"><div class="legend-dot Josh"></div> Josh</div>
     <div class="legend-item"><div class="legend-dot SGW"></div> Special Guest</div>
@@ -367,7 +367,7 @@
 // BASE 3-WEEK ROTATION
 // Index = day offset from cycle start (Mon wk1 = 0)
 // Each entry: [morningWalker, eveningWalker]
-// Dad appears in morning slots only as a last resort (Mom and Josh both unavailable).
+// Dad does weekday evenings + weekend (Sat) mornings. Weekday mornings: last resort only.
 // ─────────────────────────────────────────
 const BASE_ROTATION = [
   // Week 1
@@ -376,7 +376,7 @@ const BASE_ROTATION = [
   ['Mom',  'Josh'],  // Wed
   ['Josh', 'Dad'],   // Thu
   ['Mom',  'Josh'],  // Fri
-  ['Josh', 'Mom'],   // Sat
+  ['Dad',  'Mom'],   // Sat  ← Dad takes Sat morning
   ['Mom',  'Dad'],   // Sun
   // Week 2
   ['Josh', 'Mom'],   // Mon
@@ -384,7 +384,7 @@ const BASE_ROTATION = [
   ['Josh', 'Mom'],   // Wed
   ['Mom',  'Josh'],  // Thu
   ['Josh', 'Dad'],   // Fri
-  ['Mom',  'Josh'],  // Sat
+  ['Dad',  'Josh'],  // Sat  ← Dad takes Sat morning
   ['Josh', 'Dad'],   // Sun
   // Week 3
   ['Mom',  'Josh'],  // Mon
@@ -406,6 +406,9 @@ const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const WALKERS = ['Dad','Mom','Josh'];
 const MORNING_WALKERS = ['Mom','Josh'];
+
+function isWeekend(date) { const d = date.getDay(); return d === 0 || d === 6; }
+function morningPool(date) { return isWeekend(date) ? WALKERS : [...MORNING_WALKERS, 'Dad']; }
 
 // ─────────────────────────────────────────
 // DATE HELPERS
@@ -511,7 +514,7 @@ function computeSlot(date, slotName) {
 
   const alreadyWalking = new Set(otherComputed ? [otherComputed] : []);
 
-  const pool = slotName === 'morning' ? [...MORNING_WALKERS, 'Dad'] : WALKERS;
+  const pool = slotName === 'morning' ? morningPool(date) : WALKERS;
   for (const w of pool) {
     if (!unavailable.has(w) && !alreadyWalking.has(w) && w !== base) {
       return { walker: w, isOverridden: true, sub: w };
@@ -529,7 +532,7 @@ function computeSlot(date, slotName) {
 function computeMornOnly(date, unavailable, exclude) {
   const [baseMorn] = baseSlot(date);
   if (!unavailable.has(baseMorn) && baseMorn !== exclude) return baseMorn;
-  for (const w of [...MORNING_WALKERS, 'Dad']) {
+  for (const w of morningPool(date)) {
     if (!unavailable.has(w) && w !== exclude) return w;
   }
   return baseMorn;
@@ -695,7 +698,7 @@ function closePicker() { document.getElementById('pickerOverlay').classList.remo
 function closePickerIfOutside(e) { if (e.target === document.getElementById('pickerOverlay')) closePicker(); }
 
 function assignWalker(walker) {
-  if (walker === 'Dad' && _pickerSlot === 'morning') {
+  if (walker === 'Dad' && _pickerSlot === 'morning' && !isWeekend(fromYMD(_pickerDate))) {
     const fmt = _pickerDate.slice(5).replace('-', '/');
     if (!confirm(`This puts Dad on a morning walk (${fmt}).\n\nHas Dad agreed to this?`)) return;
   }
@@ -741,7 +744,7 @@ function addOverride() {
   let d = fromYMD(newOv.startDate);
   const rangeEnd = fromYMD(newOv.endDate);
   while (d <= rangeEnd) {
-    if (computeSlot(d, 'morning').walker === 'Dad') dadDates.push(toYMD(d));
+    if (!isWeekend(d) && computeSlot(d, 'morning').walker === 'Dad') dadDates.push(toYMD(d));
     d = addDays(d, 1);
   }
   _overrides = prev;
