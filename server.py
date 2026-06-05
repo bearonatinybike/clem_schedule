@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-import http.server, json, os, pathlib
+import http.server, json, os, pathlib, ssl
 
 PORT = 8093
 BASE = pathlib.Path(__file__).parent
 OVERRIDES_FILE = BASE / 'overrides.json'
+CERT = pathlib.Path('/etc/ssl/letsencrypt/fullchain.pem')
+KEY  = pathlib.Path('/etc/ssl/letsencrypt/privkey.pem')
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -44,4 +46,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     with http.server.HTTPServer(('', PORT), Handler) as httpd:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(CERT, KEY)
+        httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
         httpd.serve_forever()
