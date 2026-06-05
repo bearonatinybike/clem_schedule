@@ -284,7 +284,7 @@
 
 <main>
   <div class="legend">
-    <div class="legend-item"><div class="legend-dot Dad"></div> Dad (evenings only)</div>
+    <div class="legend-item"><div class="legend-dot Dad"></div> Dad (evenings; mornings as last resort)</div>
     <div class="legend-item"><div class="legend-dot Mom"></div> Mom</div>
     <div class="legend-item"><div class="legend-dot Josh"></div> Josh</div>
   </div>
@@ -348,7 +348,7 @@
 // BASE 3-WEEK ROTATION
 // Index = day offset from cycle start (Mon wk1 = 0)
 // Each entry: [morningWalker, eveningWalker]
-// Dad never appears in morning slots.
+// Dad appears in morning slots only as a last resort (Mom and Josh both unavailable).
 // ─────────────────────────────────────────
 const BASE_ROTATION = [
   // Week 1
@@ -484,7 +484,7 @@ function computeSlot(date, slotName) {
 
   const alreadyWalking = new Set([otherComputed]);
 
-  const pool = slotName === 'morning' ? MORNING_WALKERS : WALKERS;
+  const pool = slotName === 'morning' ? [...MORNING_WALKERS, 'Dad'] : WALKERS;
   for (const w of pool) {
     if (!unavailable.has(w) && !alreadyWalking.has(w) && w !== base) {
       return { walker: w, isOverridden: true, sub: w };
@@ -502,7 +502,7 @@ function computeSlot(date, slotName) {
 function computeMornOnly(date, unavailable, exclude) {
   const [baseMorn] = baseSlot(date);
   if (!unavailable.has(baseMorn) && baseMorn !== exclude) return baseMorn;
-  for (const w of MORNING_WALKERS) {
+  for (const w of [...MORNING_WALKERS, 'Dad']) {
     if (!unavailable.has(w) && w !== exclude) return w;
   }
   return baseMorn;
@@ -642,14 +642,34 @@ function addOverride() {
   const end    = document.getElementById('ovEnd').value;
   if (!start) { alert('Please pick a date.'); return; }
   if (type === 'range' && end < start) { alert('End date must be after start date.'); return; }
-  const overrides = getOverrides();
-  overrides.push({
+
+  const newOv = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
     walker, type,
     startDate: start,
     endDate: type === 'range' ? end : start
-  });
-  saveOverrides(overrides);
+  };
+  const proposed = [...getOverrides(), newOv];
+
+  // Tentatively apply proposed overrides, scan range for Dad on mornings
+  const prev = _overrides;
+  _overrides = proposed;
+  const dadDates = [];
+  let d = fromYMD(newOv.startDate);
+  const rangeEnd = fromYMD(newOv.endDate);
+  while (d <= rangeEnd) {
+    if (computeSlot(d, 'morning').walker === 'Dad') dadDates.push(toYMD(d));
+    d = addDays(d, 1);
+  }
+  _overrides = prev;
+
+  if (dadDates.length > 0) {
+    const fmt = dadDates.slice(0, 3).map(s => s.slice(5).replace('-', '/'))
+                        .join(', ') + (dadDates.length > 3 ? ` (+${dadDates.length - 3} more)` : '');
+    if (!confirm(`This puts Dad on morning walks (${fmt}).\n\nHas Dad agreed to this?`)) return;
+  }
+
+  saveOverrides(proposed);
   closePanel();
   render();
 }
