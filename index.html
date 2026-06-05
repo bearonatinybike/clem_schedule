@@ -424,12 +424,24 @@ function baseSlot(date) {
   return BASE_ROTATION[idx];
 }
 
+let _overrides = [];
+
 function getOverrides() {
-  try { return JSON.parse(localStorage.getItem('clemOverrides') || '[]'); }
-  catch { return []; }
+  return _overrides;
 }
 function saveOverrides(arr) {
-  localStorage.setItem('clemOverrides', JSON.stringify(arr));
+  _overrides = arr;
+  fetch('/overrides', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(arr)
+  });
+}
+async function loadOverrides() {
+  try {
+    const r = await fetch('/overrides');
+    _overrides = await r.json();
+  } catch { _overrides = []; }
 }
 
 function isAffected(override, dateStr, slot) {
@@ -697,7 +709,7 @@ function clearAllOverrides() {
 // Pre-fill today's date on the override form
 document.getElementById('ovStart').value = toYMD(new Date());
 document.getElementById('ovEnd').value   = toYMD(new Date());
-render();
+loadOverrides().then(() => render());
 </script>
 </body>
 </html>
