@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# install.sh — run this on the Pi to set up the permanent service
+# Usage: bash install.sh
+
+set -e
+
+PORT=8093
+SERVICE=clem-schedule
+INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "📦 Installing Clem's Walk Schedule from: $INSTALL_DIR"
+
+# Install systemd service
+sudo cp "$INSTALL_DIR/clem-schedule.service" /etc/systemd/system/
+sudo sed -i "s|/home/pi/OneDrive/Dev/clem_schedule|$INSTALL_DIR|g" /etc/systemd/system/clem-schedule.service
+sudo sed -i "s|User=pi|User=$(whoami)|g" /etc/systemd/system/clem-schedule.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE
+sudo systemctl restart $SERVICE
+
+echo ""
+echo "✅ Service installed and started."
+echo "   Listening on port $PORT"
+echo "   Status: $(systemctl is-active $SERVICE)"
+echo ""
+echo "   Access at: http://$(hostname -I | awk '{print $1}'):$PORT"
+echo ""
+echo "📋 To add to your Pi menu, copy the card snippet from pi-menu-card.html"
