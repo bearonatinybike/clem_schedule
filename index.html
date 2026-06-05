@@ -309,7 +309,6 @@
         <option value="Dad">Dad</option>
         <option value="Mom">Mom</option>
         <option value="Josh">Josh</option>
-        <option value="SGW">Special Guest</option>
       </select>
     </div>
     <div class="form-row">
@@ -334,6 +333,18 @@
     <div class="form-actions">
       <button class="btn btn-ghost" style="color:var(--bark-mid);border-color:var(--border)" onclick="closePanel()">Cancel</button>
       <button class="btn btn-primary" onclick="addOverride()">Save override</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick slot picker -->
+<div class="panel-overlay" id="pickerOverlay" onclick="closePickerIfOutside(event)">
+  <div class="panel" style="width:min(280px,95vw)">
+    <button class="panel-close" onclick="closePicker()">&times;</button>
+    <h2 id="pickerTitle" style="margin-bottom:1rem">Change walker</h2>
+    <div id="pickerButtons" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div style="margin-top:1rem;text-align:center">
+      <button class="btn btn-ghost btn-sm" style="color:var(--bark-mid);border-color:var(--border);width:100%" onclick="clearAssignment()">Reset to rotation default</button>
     </div>
   </div>
 </div>
@@ -469,15 +480,19 @@ function computeSlot(date, slotName) {
   const base = slotName === 'morning' ? baseMorn : baseEve;
   const overrides = getOverrides();
 
-  // Guest covering this slot takes priority over everything
-  if (overrides.some(ov => ov.walker === 'SGW' && isAffected(ov, dateStr, slotName))) {
+  // Direct assignment overrides everything
+  const assigned = overrides.find(ov => ov.type === 'assign' && ov.slot === slotName && ov.startDate === dateStr);
+  if (assigned) return { walker: assigned.walker, isOverridden: assigned.walker !== base, sub: null };
+
+  // Guest covering this slot takes priority over unavailability reflow
+  if (overrides.some(ov => ov.walker === 'SGW' && ov.type !== 'assign' && isAffected(ov, dateStr, slotName))) {
     return { walker: 'SGW', isOverridden: false, sub: null };
   }
 
-  // Collect who is unavailable (SGW overrides don't mark a person unavailable)
+  // Collect who is unavailable (exclude SGW and direct assignment overrides)
   const unavailable = new Set();
   for (const ov of overrides) {
-    if (ov.walker && ov.walker !== 'SGW' && isAffected(ov, dateStr, slotName)) {
+    if (ov.walker && ov.walker !== 'SGW' && ov.type !== 'assign' && isAffected(ov, dateStr, slotName)) {
       unavailable.add(ov.walker);
     }
   }
@@ -651,16 +666,57 @@ function onWalkerChange() {
   document.getElementById('panelTitle').textContent = isSGW ? 'Add special guest walker' : 'Mark someone unavailable';
   document.getElementById('slotLabel').textContent   = isSGW ? 'Covering' : 'Unavailable for';
 }
+let _pickerDate = null, _pickerSlot = null;
+
 function quickMark(dateStr, slot) {
-  openPanel(dateStr, slot);
+  _pickerDate = dateStr;
+  _pickerSlot = slot;
   const d = fromYMD(dateStr);
-  const { walker } = computeSlot(d, slot);
-  const [baseMorn, baseEve] = baseSlot(d);
-  // Always pre-fill the regular walker, never SGW — guest coverage is added manually
-  document.getElementById('ovWalker').value = walker === 'SGW'
-    ? (slot === 'morning' ? baseMorn : baseEve)
-    : walker;
-  onWalkerChange();
+  const slotLabel = slot === 'morning' ? 'AM' : 'PM';
+  document.getElementById('pickerTitle').textContent = `${DAYS[d.getDay()]} ${d.getDate()} — ${slotLabel}`;
+
+  const { walker: current } = computeSlot(d, slot);
+  const options = [
+    { key: 'Dad',  label: 'Dad',   color: 'moss' },
+    { key: 'Mom',  label: 'Mom',   color: 'sky' },
+    { key: 'Josh', label: 'Josh',  color: 'amber' },
+    { key: 'SGW',  label: 'Guest', color: 'plum' },
+  ];
+  document.getElementById('pickerButtons').innerHTML = options.map(o =>
+    `<button class="walker-chip ${o.key}" style="justify-content:center${current===o.key?`;outline:2px solid var(--${o.color})`:''}"
+      onclick="assignWalker('${o.key}')">
+      <span class="chip-dot"></span>${o.label}${current===o.key?' ✓':''}
+    </button>`
+  ).join('');
+
+  document.getElementById('pickerOverlay').classList.add('open');
+}
+function closePicker() { document.getElementById('pickerOverlay').classList.remove('open'); }
+function closePickerIfOutside(e) { if (e.target === document.getElementById('pickerOverlay')) closePicker(); }
+
+function assignWalker(walker) {
+  if (walker === 'Dad' && _pickerSlot === 'morning') {
+    const fmt = _pickerDate.slice(5).replace('-', '/');
+    if (!confirm(`This puts Dad on a morning walk (${fmt}).\n\nHas Dad agreed to this?`)) return;
+  }
+  const overrides = getOverrides().filter(ov =>
+    !(ov.type === 'assign' && ov.slot === _pickerSlot && ov.startDate === _pickerDate)
+  );
+  overrides.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    type: 'assign', slot: _pickerSlot, walker,
+    startDate: _pickerDate, endDate: _pickerDate
+  });
+  saveOverrides(overrides);
+  closePicker();
+  render();
+}
+function clearAssignment() {
+  saveOverrides(getOverrides().filter(ov =>
+    !(ov.type === 'assign' && ov.slot === _pickerSlot && ov.startDate === _pickerDate)
+  ));
+  closePicker();
+  render();
 }
 function addOverride() {
   const walker = document.getElementById('ovWalker').value;
@@ -729,9 +785,13 @@ function renderOverrideList() {
       ? `${ov.startDate} → ${ov.endDate}`
       : ov.startDate;
     const isSGW = ov.walker === 'SGW';
+    const isAssign = ov.type === 'assign';
     const walkerColor = isSGW ? 'plum' : ov.walker === 'Dad' ? 'moss' : ov.walker === 'Mom' ? 'sky' : 'amber';
     const walkerLabel = isSGW ? 'Guest' : ov.walker;
-    const desc = isSGW ? `Guest covers ${typeLabel} &mdash; ${dateLabel}` : `${typeLabel} &mdash; ${dateLabel}`;
+    const slotName = ov.slot === 'morning' ? 'AM' : ov.slot === 'evening' ? 'PM' : null;
+    const desc = isAssign
+      ? `Direct: ${slotName} on ${ov.startDate}`
+      : isSGW ? `Guest covers ${typeLabel} &mdash; ${dateLabel}` : `${typeLabel} &mdash; ${dateLabel}`;
     html += `<div class="override-item">
       <span class="oi-walker ${ov.walker}" style="color:var(--${walkerColor})">${walkerLabel}</span>
       <span class="oi-desc">${desc}</span>
