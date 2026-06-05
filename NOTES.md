@@ -11,9 +11,9 @@ static files and shared override storage.
 Three walkers: **Dad**, **Mom**, **Josh**.
 - 2 walks per day: morning and evening
 - Nobody walks twice in one day unless there's no alternative
-- Dad does weekday evenings + Saturday mornings
+- Dad does all weekend mornings (Sat + Sun) + weekday evenings
 - Dad can cover weekday mornings as a last resort (see below)
-- Perfectly equal over a **3-week repeating cycle** (7 walks each per cycle)
+- Perfectly equal over a **3-week repeating cycle** (14 walks each per cycle)
 
 The base 3-week rotation is encoded in `index.html` as a JS array. Week 4 = Week 1, etc.
 
@@ -81,7 +81,7 @@ SGW is only available in the slot picker, not the main override panel.
 
 ## Dad on Mornings
 
-Dad is in the base rotation for Saturday mornings (2 of every 3 Saturdays).
+Dad takes all weekend mornings (every Saturday and Sunday).
 On weekends the full three-person pool is used for morning cover, so Dad is a
 normal fallback alongside Mom and Josh.
 

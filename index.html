@@ -367,33 +367,33 @@
 // BASE 3-WEEK ROTATION
 // Index = day offset from cycle start (Mon wk1 = 0)
 // Each entry: [morningWalker, eveningWalker]
-// Dad does weekday evenings + weekend (Sat) mornings. Weekday mornings: last resort only.
+// Dad does all weekend mornings + weekday evenings. Weekday mornings: last resort only.
 // ─────────────────────────────────────────
 const BASE_ROTATION = [
   // Week 1
-  ['Mom',  'Dad'],   // Mon
-  ['Josh', 'Mom'],   // Tue
-  ['Mom',  'Josh'],  // Wed
-  ['Josh', 'Dad'],   // Thu
-  ['Mom',  'Josh'],  // Fri
-  ['Dad',  'Mom'],   // Sat  ← Dad takes Sat morning
-  ['Mom',  'Dad'],   // Sun
-  // Week 2
-  ['Josh', 'Mom'],   // Mon
-  ['Mom',  'Dad'],   // Tue
-  ['Josh', 'Mom'],   // Wed
-  ['Mom',  'Josh'],  // Thu
-  ['Josh', 'Dad'],   // Fri
-  ['Dad',  'Josh'],  // Sat  ← Dad takes Sat morning
-  ['Josh', 'Dad'],   // Sun
-  // Week 3
   ['Mom',  'Josh'],  // Mon
-  ['Josh', 'Dad'],   // Tue
+  ['Josh', 'Mom'],   // Tue
   ['Mom',  'Dad'],   // Wed
   ['Josh', 'Mom'],   // Thu
-  ['Mom',  'Josh'],  // Fri
-  ['Josh', 'Mom'],   // Sat
-  ['Mom',  'Dad'],   // Sun
+  ['Mom',  'Dad'],   // Fri
+  ['Dad',  'Josh'],  // Sat
+  ['Dad',  'Josh'],  // Sun
+  // Week 2
+  ['Josh', 'Dad'],   // Mon
+  ['Mom',  'Josh'],  // Tue
+  ['Josh', 'Dad'],   // Wed
+  ['Mom',  'Josh'],  // Thu
+  ['Josh', 'Dad'],   // Fri
+  ['Dad',  'Mom'],   // Sat
+  ['Dad',  'Mom'],   // Sun
+  // Week 3
+  ['Mom',  'Dad'],   // Mon
+  ['Josh', 'Mom'],   // Tue
+  ['Mom',  'Dad'],   // Wed
+  ['Josh', 'Mom'],   // Thu
+  ['Mom',  'Dad'],   // Fri
+  ['Dad',  'Josh'],  // Sat
+  ['Dad',  'Josh'],  // Sun
 ];
 const CYCLE_LEN = 21; // days
 
