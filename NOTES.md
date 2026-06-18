@@ -104,7 +104,7 @@ overrides need a writable server-side endpoint.
 
 ```bash
 # Run manually (port 8093)
-cd ~/OneDrive/Dev/clem_schedule
+cd ~/Dev/clem_schedule
 python3 server.py
 ```
 
@@ -131,5 +131,5 @@ automatically on renewal.
 git add -A && git commit -m "update"
 git push
 # On the Pi:
-cd ~/OneDrive/Dev/clem_schedule && git pull && sudo systemctl restart clem-schedule
+cd ~/Dev/clem_schedule && git pull && sudo systemctl restart clem-schedule
 ```

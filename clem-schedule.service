@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/OneDrive/Dev/clem_schedule
-ExecStart=/usr/bin/python3 /home/pi/OneDrive/Dev/clem_schedule/server.py
+WorkingDirectory=/home/pi/Dev/clem_schedule
+ExecStart=/usr/bin/python3 /home/pi/Dev/clem_schedule/server.py
 Restart=on-failure
 RestartSec=5
 

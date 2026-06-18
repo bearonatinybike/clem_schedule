@@ -12,7 +12,7 @@ echo "📦 Installing Clem's Walk Schedule from: $INSTALL_DIR"
 
 # Install systemd service
 sudo cp "$INSTALL_DIR/clem-schedule.service" /etc/systemd/system/
-sudo sed -i "s|/home/pi/OneDrive/Dev/clem_schedule|$INSTALL_DIR|g" /etc/systemd/system/clem-schedule.service
+sudo sed -i "s|/home/pi/Dev/clem_schedule|$INSTALL_DIR|g" /etc/systemd/system/clem-schedule.service
 sudo sed -i "s|User=pi|User=$(whoami)|g" /etc/systemd/system/clem-schedule.service
 
 sudo systemctl daemon-reload
