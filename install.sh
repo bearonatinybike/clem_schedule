@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# install.sh — run this on the Pi to set up the permanent service
+# install.sh — sets up the native systemd service (no Docker required).
+# This is a portable fallback for a fresh Pi; linuxvm itself runs this app
+# as a Docker container instead (see NOTES.md).
 # Usage: bash install.sh
 
 set -e

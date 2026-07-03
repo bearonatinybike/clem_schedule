@@ -97,32 +97,35 @@ If the household changes (new walker, walker leaves, Dad gets mornings back):
 - Edit the `BASE_ROTATION` array near the top of the `<script>` block in `index.html`
 - The array is 42 entries (21 days × 2 slots), cycling from Week 1 Monday morning
 
-## Serving on the Pi
+## Serving
 
 The app requires `server.py` — it can't be served as a plain static file because
 overrides need a writable server-side endpoint.
 
-```bash
-# Run manually (port 8093)
-cd ~/Dev/clem_schedule
-python3 server.py
-```
-
-For the permanent systemd service:
+Deployed as a Docker container on `linuxvm`, defined in `/home/ben/docker/compose.yml`.
+Source lives in place at `~/dev/clem_schedule` (the compose build context points
+directly at this directory, so there's no separate deploy/copy step):
 
 ```bash
-bash install.sh   # installs/restarts clem-schedule.service on port 8093
+cd /home/ben/docker
+docker compose build clem-schedule
+docker compose up -d clem-schedule
 ```
 
-Access at `https://pi.bearonatinybike.com:8093` from any device on the local network.
-TLS uses the Let's Encrypt cert at `/etc/ssl/letsencrypt/`. The cert renewal hook
-at `/etc/letsencrypt/renewal-hooks/deploy/copy-certs.sh` restarts the service
-automatically on renewal.
+Access at `https://linuxvm.bearonatinybike.com:8093` from any device on the local network.
+TLS uses the Let's Encrypt cert at `/etc/ssl/letsencrypt/` (bind-mounted read-only into
+the container). The cert renewal hook at
+`/etc/letsencrypt/renewal-hooks/deploy/copy-certs.sh` runs `docker restart clem-schedule`
+automatically on renewal so the container picks up the new cert.
+
+A native systemd deployment (`install.sh` / `clem-schedule.service`) is also kept in this
+repo as a portable fallback for a fresh, non-Dockerized Pi — it's not what runs on `linuxvm`
+today.
 
 ## Maintenance
 
-- Overrides persist in `overrides.json` on the Pi — shared by all users
-- To back up overrides, copy `overrides.json` out of the install directory
+- Overrides persist in `overrides.json` on the host, bind-mounted into the container — shared by all users
+- To back up overrides, copy `overrides.json` out of `~/dev/clem_schedule`
 - To fully reset, click "Clear all overrides" in the settings panel (or `echo '[]' > overrides.json`)
 
 ## Git / Deployment
@@ -130,6 +133,7 @@ automatically on renewal.
 ```bash
 git add -A && git commit -m "update"
 git push
-# On the Pi:
-cd ~/Dev/clem_schedule && git pull && sudo systemctl restart clem-schedule
+# On linuxvm (source and deployment are the same host):
+cd ~/dev/clem_schedule && git pull
+cd /home/ben/docker && docker compose build clem-schedule && docker compose up -d clem-schedule
 ```
