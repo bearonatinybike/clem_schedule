@@ -118,10 +118,6 @@ the container). The cert renewal hook at
 `/etc/letsencrypt/renewal-hooks/deploy/copy-certs.sh` runs `docker restart clem-schedule`
 automatically on renewal so the container picks up the new cert.
 
-A native systemd deployment (`install.sh` / `clem-schedule.service`) is also kept in this
-repo as a portable fallback for a fresh, non-Dockerized Pi — it's not what runs on `linuxvm`
-today.
-
 ## Maintenance
 
 - Overrides persist in `overrides.json` on the host, bind-mounted into the container — shared by all users
