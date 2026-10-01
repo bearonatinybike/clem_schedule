@@ -14,7 +14,7 @@ A self-hosted single-file web app for managing Clementine's daily walk rota.
 
 ## Running
 
-Runs as a Docker container on `linuxvm` (see `AGENT.md` for the deploy commands). To run it standalone for local testing:
+Runs as a Docker container on `linuxvm` (see `AGENTS.md` for the deploy commands). To run it standalone for local testing:
 
 ```bash
 python3 server.py
@@ -24,4 +24,4 @@ Then browse to `https://localhost:8093`. Requires the TLS cert files referenced 
 
 ## See also
 
-`AGENT.md` for detailed notes on the schedule logic, deployment, and maintenance.
+`AGENTS.md` for detailed notes on the schedule logic, deployment, and maintenance.

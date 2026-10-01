@@ -1,4 +1,4 @@
-# AGENT.md
+# AGENTS.md
 
 Guidance for AI coding agents working in this repository. `README.md` covers
 features from a user's perspective; this file covers architecture, deployment,
