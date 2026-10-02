@@ -139,8 +139,10 @@ in production.
 - Overrides persist in `overrides.json` on the host, bind-mounted into the
   container — shared by all users
 - To back up overrides, copy `overrides.json` out of `~/dev/clem_schedule`
-- To fully reset, click "Clear all overrides" in the settings panel (or
-  `echo '[]' > overrides.json`)
+- "Manage overrides" lists only current and upcoming overrides (end date today or
+  later). Past ones stay in `overrides.json` so earlier weeks still render as they
+  happened; its "Clear all" removes only the listed ones
+- To fully reset, including past overrides: `echo '[]' > overrides.json`
 
 ## Git / Deployment
 

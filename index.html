@@ -267,6 +267,9 @@
   .override-item .oi-desc { flex: 1; color: var(--bark-mid); }
   .override-item button { background: none; border: none; cursor: pointer; color: var(--coral); font-size: 0.75rem; font-weight: 500; }
   .empty-state { font-size: 0.82rem; color: var(--bark-lite); font-style: italic; }
+  /* Long lists scroll inside the panel; heading and buttons stay put */
+  .list-panel { max-height: 90vh; max-height: 90dvh; display: flex; flex-direction: column; }
+  .list-panel #overrideListContent { overflow-y: auto; min-height: 0; margin: 0 -4px; padding: 0 4px; }
 
   /* ── Legend ── */
   .legend {
@@ -399,7 +402,7 @@
 
 <!-- Override list panel -->
 <div class="panel-overlay" id="listOverlay" onclick="closeListIfOutside(event)">
-  <div class="panel">
+  <div class="panel list-panel">
     <button class="panel-close" onclick="closeList()">&times;</button>
     <h2>Active overrides</h2>
     <div id="overrideListContent"></div>
@@ -823,6 +826,25 @@ function closeList() {
 function closeListIfOutside(e) {
   if (e.target === document.getElementById('listOverlay')) closeList();
 }
+function overrideItemHTML(ov) {
+  const typeLabel = { morning:'AM only', evening:'PM only', day:'Full day', range:'Date range' }[ov.type];
+  const dateLabel = ov.type === 'range'
+    ? `${ov.startDate} → ${ov.endDate}`
+    : ov.startDate;
+  const isSGW = ov.walker === 'SGW';
+  const isAssign = ov.type === 'assign';
+  const walkerColor = isSGW ? 'plum' : ov.walker === 'Dad' ? 'moss' : ov.walker === 'Mom' ? 'sky' : 'amber';
+  const walkerLabel = isSGW ? 'Guest' : ov.walker;
+  const slotName = ov.slot === 'morning' ? 'AM' : ov.slot === 'evening' ? 'PM' : null;
+  const desc = isAssign
+    ? `Direct: ${slotName} on ${ov.startDate}`
+    : isSGW ? `Guest covers ${typeLabel} &mdash; ${dateLabel}` : `${typeLabel} &mdash; ${dateLabel}`;
+  return `<div class="override-item">
+    <span class="oi-walker ${ov.walker}" style="color:var(--${walkerColor})">${walkerLabel}</span>
+    <span class="oi-desc">${desc}</span>
+    <button onclick="removeOverride('${ov.id}')">Remove</button>
+  </div>`;
+}
 function renderOverrideList() {
   const overrides = getOverrides();
   const el = document.getElementById('overrideListContent');
@@ -830,28 +852,15 @@ function renderOverrideList() {
     el.innerHTML = `<p class="empty-state">No overrides set.</p>`;
     return;
   }
-  const sorted = [...overrides].sort((a,b) => a.startDate.localeCompare(b.startDate));
-  let html = '<div class="override-list">';
-  for (const ov of sorted) {
-    const typeLabel = { morning:'AM only', evening:'PM only', day:'Full day', range:'Date range' }[ov.type];
-    const dateLabel = ov.type === 'range'
-      ? `${ov.startDate} → ${ov.endDate}`
-      : ov.startDate;
-    const isSGW = ov.walker === 'SGW';
-    const isAssign = ov.type === 'assign';
-    const walkerColor = isSGW ? 'plum' : ov.walker === 'Dad' ? 'moss' : ov.walker === 'Mom' ? 'sky' : 'amber';
-    const walkerLabel = isSGW ? 'Guest' : ov.walker;
-    const slotName = ov.slot === 'morning' ? 'AM' : ov.slot === 'evening' ? 'PM' : null;
-    const desc = isAssign
-      ? `Direct: ${slotName} on ${ov.startDate}`
-      : isSGW ? `Guest covers ${typeLabel} &mdash; ${dateLabel}` : `${typeLabel} &mdash; ${dateLabel}`;
-    html += `<div class="override-item">
-      <span class="oi-walker ${ov.walker}" style="color:var(--${walkerColor})">${walkerLabel}</span>
-      <span class="oi-desc">${desc}</span>
-      <button onclick="removeOverride('${ov.id}')">Remove</button>
-    </div>`;
-  }
-  html += '</div>';
+  // Overrides that finished before today aren't listed. They stay stored so
+  // earlier weeks still render as they actually happened.
+  const today = toYMD(new Date());
+  const current = overrides
+    .filter(ov => (ov.endDate || ov.startDate) >= today)
+    .sort((a,b) => a.startDate.localeCompare(b.startDate));
+  const html = current.length
+    ? '<div class="override-list">' + current.map(overrideItemHTML).join('') + '</div>'
+    : `<p class="empty-state">No current or upcoming overrides.</p>`;
   el.innerHTML = html;
 }
 function removeOverride(id) {
@@ -861,8 +870,10 @@ function removeOverride(id) {
   render();
 }
 function clearAllOverrides() {
-  if (!confirm('Remove all overrides? The schedule will revert to the base rotation.')) return;
-  saveOverrides([]);
+  if (!confirm('Remove all current and upcoming overrides? The schedule will revert to the base rotation.')) return;
+  // Past overrides stay, so earlier weeks keep showing what actually happened
+  const today = toYMD(new Date());
+  saveOverrides(getOverrides().filter(ov => (ov.endDate || ov.startDate) < today));
   closeList();
   render();
 }
