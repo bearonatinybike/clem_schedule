@@ -1,0 +1,14 @@
+services:
+  clem-schedule:
+    build: .
+    image: clem-schedule:latest
+    container_name: clem-schedule
+    restart: unless-stopped
+    user: "1000:1000"
+    group_add:
+      - "106" # ssl-cert, for reading letsencrypt certs
+    ports:
+      - "8093:8093"
+    volumes:
+      - ./overrides.json:/app/overrides.json
+      - /etc/ssl/letsencrypt:/etc/ssl/letsencrypt:ro

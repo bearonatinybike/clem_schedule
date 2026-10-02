@@ -116,15 +116,13 @@ Requires the TLS cert files referenced at the top of `server.py`. Browse to
 
 ## Build & Deploy
 
-Source lives in place at `~/dev/clem_schedule` — the compose build context in
-`/home/ben/docker/compose.yml` points directly at this directory, so there's no
-separate copy/deploy step. Dockerfile lives at
-`/home/ben/docker/clem-schedule/Dockerfile`.
+Source lives in place at `~/dev/clem_schedule`, and the repo carries its own
+`Dockerfile` and `docker-compose.yml` (its own Compose project, so it gets its own
+`clem_schedule_default` bridge network). Rebuild and restart from the checkout:
 
 ```bash
-cd /home/ben/docker
-docker compose build clem-schedule
-docker compose up -d clem-schedule
+cd ~/dev/clem_schedule
+docker compose up -d --build
 ```
 
 Runs as container `clem-schedule`, published on `8093`. Access at
@@ -150,6 +148,5 @@ in production.
 git add -A && git commit -m "update"
 git push
 # On linuxvm (source and deployment are the same host):
-cd ~/dev/clem_schedule && git pull
-cd /home/ben/docker && docker compose build clem-schedule && docker compose up -d clem-schedule
+cd ~/dev/clem_schedule && git pull && docker compose up -d --build
 ```
